@@ -13,6 +13,7 @@ type BillingInfo struct {
 	PhoneNumber uint32 `json:"phone number"`
 	FirstName   string `json:"first name"`
 	LastName    string `json:"last name"`
+	UID         uint   `json:"ID"`
 }
 
 func (b BillingInfo) Contact() uint32 {

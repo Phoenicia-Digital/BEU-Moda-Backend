@@ -2,7 +2,12 @@
 package source
 
 type User struct {
-	Email    string      `json:"email"`
-	Password string      `json:"password"`
-	Billing  BillingInfo `json:"billing info"`
+	UID         uint        `json:"ID"`
+	Email       string      `json:"email"`
+	Password    string      `json:"password"`
+	BillingInfo BillingInfo `json:"billing info"`
+}
+
+func (u User) Account() (string, string) {
+	return u.Email, u.Password
 }

@@ -126,9 +126,3 @@ func implementPostgres() *sql.DB {
 		return nil
 	}
 }
-
-func init() {
-	if Postgres.DB != nil {
-		defer Postgres.DB.Close()
-	}
-}

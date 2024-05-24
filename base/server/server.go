@@ -4,6 +4,7 @@ package PhoeniciaDigitalServer
 import (
 	PhoeniciaDigitalUtils "Phoenicia-Digital-Base-API/base/utils"
 	PhoeniciaDigitalConfig "Phoenicia-Digital-Base-API/config"
+	"Phoenicia-Digital-Base-API/source"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,4 +41,6 @@ func StartServer() {
 }
 
 // Initialize Server Logic
-// func init() {}
+func init() {
+	multiplexer.Handle("POST /register", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.RegisterNewUser))
+}

@@ -43,4 +43,5 @@ func StartServer() {
 // Initialize Server Logic
 func init() {
 	multiplexer.Handle("POST /register", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.RegisterNewUser))
+	multiplexer.Handle("GET /register", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.LoginUser))
 }

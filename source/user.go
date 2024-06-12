@@ -66,8 +66,10 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 	var dbPassword string
 	var stmt *sql.Stmt
 
-	if err := json.NewDecoder(r.Body).Decode(&loginUser); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+	loginUser.Email = r.URL.Query().Get("email")
+	loginUser.Password = r.URL.Query().Get("password")
+	if loginUser.Email == "" || loginUser.Password == "" {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Failed Dependancy Email: %s, Password: %s", loginUser.Email, loginUser.Password)}
 	}
 
 	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("LoginUser"); err != nil {
@@ -97,5 +99,5 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusUnauthorized, Quote: "Invalid Password"}
 	}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusFound, Quote: loginUser}
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: loginUser}
 }

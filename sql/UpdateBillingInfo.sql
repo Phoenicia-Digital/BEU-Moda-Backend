@@ -1,0 +1,1 @@
+UPDATE billing_info SET country = $1, province = $2, city = $3, street = $4, building = $5, floor = $6, phone_number = $7, first_name = $8, last_name = $9 WHERE user_id = $10 RETURNING id;

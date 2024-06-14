@@ -50,4 +50,5 @@ func init() {
 	})
 	multiplexer.Handle("POST /register", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.RegisterNewUser))
 	multiplexer.Handle("GET /register", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.LoginUser))
+	multiplexer.Handle("POST /billing", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.ManageBillingInfo))
 }

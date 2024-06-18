@@ -105,7 +105,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 			Name:     "user_id",
 			Value:    fmt.Sprint(newUser.UID),
 			Secure:   true,
-			HttpOnly: true,
+			HttpOnly: false,
 		})
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "User Created"}
 	}
@@ -199,7 +199,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 					Name:     "user_id",
 					Value:    fmt.Sprint(loginUser.UID),
 					Secure:   true,
-					HttpOnly: true,
+					HttpOnly: false,
 				})
 				return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Created"}
 			}
@@ -227,7 +227,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 			Name:     "user_id",
 			Value:    fmt.Sprint(loginUser.UID),
 			Secure:   true,
-			HttpOnly: true,
+			HttpOnly: false,
 		})
 
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Exists"}
@@ -319,6 +319,28 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
 		}
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Expires:  time.Now(),
+		Secure:   true,
+		HttpOnly: true,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_email",
+		Value:    "",
+		Secure:   true,
+		HttpOnly: false,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_id",
+		Value:    "",
+		Secure:   true,
+		HttpOnly: false,
+	})
 
 	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: "Session Deleted"}
 

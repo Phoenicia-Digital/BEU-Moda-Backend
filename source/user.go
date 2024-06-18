@@ -323,7 +323,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    "",
-		Expires:  time.Now(),
+		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   true,
 		HttpOnly: true,
 	})

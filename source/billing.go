@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 type BillingInfo struct {
@@ -43,11 +44,27 @@ func ManageBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 	var newBillingInfo User
 	var stmt *sql.Stmt
 
-	if err := json.NewDecoder(r.Body).Decode(&newBillingInfo); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&newBillingInfo.BillingInfo); err != nil {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	}
 
-	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckUserForBillingInfo"); err != nil {
+	if cooki, err := r.Cookie("session_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No Session ID | Error: %s", err.Error())}
+	} else {
+		newBillingInfo.Session.Session_id = cooki.Value
+	}
+
+	if cookie, err := r.Cookie("user_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No User ID | Error: %s", err.Error())}
+	} else {
+		if uid, err := strconv.Atoi(cookie.Value); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+		} else {
+			newBillingInfo.UID = uint(uid)
+		}
+	}
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckSession"); err != nil {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	} else {
 		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
@@ -58,11 +75,11 @@ func ManageBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 		}
 	}
 
-	if err := stmt.QueryRow(newBillingInfo.UID, newBillingInfo.Email).Scan(&newBillingInfo.UID, &newBillingInfo.Email); err != nil {
+	if err := stmt.QueryRow(newBillingInfo.Session.Session_id, newBillingInfo.UID).Scan(&newBillingInfo.Session.ID); err != nil {
 		if err == sql.ErrNoRows {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNonAuthoritativeInfo, Quote: "NOT VALID USER"}
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
 		} else {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Check Session | Error: %s", err.Error())}
 		}
 	}
 
@@ -97,7 +114,7 @@ func ManageBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 			}
 
-			return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusCreated, Quote: newBillingInfo}
+			return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusCreated, Quote: newBillingInfo.BillingInfo}
 
 		}
 	}
@@ -119,5 +136,5 @@ func ManageBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: newBillingInfo}
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: newBillingInfo.BillingInfo}
 }

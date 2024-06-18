@@ -1,1 +1,0 @@
-SELECT uid, email FROM users WHERE uid = $1 AND email = $2;

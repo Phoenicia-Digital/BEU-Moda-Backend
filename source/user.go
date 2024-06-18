@@ -69,7 +69,46 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusCreated, Quote: newUser}
+	newUser.Session.Session_id = generateSessionID(newUser.Email, newUser.Password)
+	newUser.Session.Expires = time.Now().Add(15 * 24 * time.Hour).UTC()
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CreateNewSession"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Create session | Error: %s", err.Error())}
+	} else {
+		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Create session | Error: %s", err.Error())}
+		} else {
+			stmt = _stmt
+			defer _stmt.Close()
+		}
+	}
+
+	if err := stmt.QueryRow(newUser.Session.Session_id, newUser.UID, time.Now().UTC().Format(time.RFC3339), newUser.Session.Expires).Scan(&newUser.Session.ID); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Create session | Error: %s", err.Error())}
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    newUser.Session.Session_id,
+			Expires:  newUser.Session.Expires,
+			Secure:   true,
+			HttpOnly: true,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "user_email",
+			Value:    newUser.Email,
+			Secure:   true,
+			HttpOnly: false,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "user_id",
+			Value:    fmt.Sprint(newUser.UID),
+			Secure:   true,
+			HttpOnly: true,
+		})
+		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "User Created"}
+	}
 }
 
 func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
@@ -142,11 +181,27 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Create session | Error: %s", err.Error())}
 			} else {
 				http.SetCookie(w, &http.Cookie{
-					Name:    "session_id",
-					Value:   loginUser.Session.Session_id,
-					Expires: loginUser.Session.Expires,
+					Name:     "session_id",
+					Value:    loginUser.Session.Session_id,
+					Expires:  loginUser.Session.Expires,
+					Secure:   true,
+					HttpOnly: true,
 				})
-				return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: loginUser}
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     "user_email",
+					Value:    loginUser.Email,
+					Secure:   true,
+					HttpOnly: false,
+				})
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     "user_id",
+					Value:    fmt.Sprint(loginUser.UID),
+					Secure:   true,
+					HttpOnly: true,
+				})
+				return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Created"}
 			}
 		} else {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
@@ -154,11 +209,28 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 	} else {
 
 		http.SetCookie(w, &http.Cookie{
-			Name:    "session_id",
-			Value:   loginUser.Session.Session_id,
-			Expires: loginUser.Session.Expires,
+			Name:     "session_id",
+			Value:    loginUser.Session.Session_id,
+			Expires:  loginUser.Session.Expires,
+			Secure:   true,
+			HttpOnly: true,
 		})
-		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: loginUser}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "user_email",
+			Value:    loginUser.Email,
+			Secure:   true,
+			HttpOnly: false,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "user_id",
+			Value:    fmt.Sprint(loginUser.UID),
+			Secure:   true,
+			HttpOnly: true,
+		})
+
+		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Exists"}
 
 	}
 
@@ -174,10 +246,14 @@ func CheckSession(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		usr.Session.Session_id = cooki.Value
 	}
 
-	if uid, err := strconv.Atoi(r.URL.Query().Get("uid")); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+	if cookie, err := r.Cookie("user_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No User ID | Error: %s", err.Error())}
 	} else {
-		usr.UID = uint(uid)
+		if uid, err := strconv.Atoi(cookie.Value); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+		} else {
+			usr.UID = uint(uid)
+		}
 	}
 
 	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckSession"); err != nil {
@@ -199,7 +275,7 @@ func CheckSession(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		}
 	}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: usr.Session}
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: "Session Exists"}
 
 }
 
@@ -213,10 +289,14 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		usr.Session.Session_id = cooki.Value
 	}
 
-	if uid, err := strconv.Atoi(r.URL.Query().Get("uid")); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+	if cookie, err := r.Cookie("user_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No User ID | Error: %s", err.Error())}
 	} else {
-		usr.UID = uint(uid)
+		if uid, err := strconv.Atoi(cookie.Value); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+		} else {
+			usr.UID = uint(uid)
+		}
 	}
 
 	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("LogoutUser"); err != nil {

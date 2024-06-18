@@ -203,6 +203,47 @@ func CheckSession(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 
 }
 
+func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
+	var usr User
+	var stmt *sql.Stmt
+
+	if cooki, err := r.Cookie("session_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No Session ID | Error: %s", err.Error())}
+	} else {
+		usr.Session.Session_id = cooki.Value
+	}
+
+	if uid, err := strconv.Atoi(r.URL.Query().Get("uid")); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+	} else {
+		usr.UID = uint(uid)
+	}
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("LogoutUser"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
+	} else {
+		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
+		} else {
+			stmt = _stmt
+			defer _stmt.Close()
+		}
+	}
+
+	if res, err := stmt.Exec(usr.Session.Session_id, usr.UID); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Delete Session | Error: %s", err.Error())}
+	} else {
+		if rows, err := res.RowsAffected(); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+		} else if rows == 0 {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
+		}
+	}
+
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: "Session Deleted"}
+
+}
+
 func generateSessionID(email, password string) string {
 	raw := fmt.Sprintf("%s:%s", email, password)
 	hash := sha256.Sum256([]byte(raw))

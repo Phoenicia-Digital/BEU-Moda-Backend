@@ -53,11 +53,12 @@ func init() {
 	multiplexer.HandleFunc("OPTIONS /login", func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers for all requests (can be more specific if needed)
 		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	})
 	multiplexer.Handle("GET /login", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.CheckSession))
 	multiplexer.Handle("POST /login", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.LoginUser))
+	multiplexer.Handle("DELETE /login", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.LogoutUser))
 
 	multiplexer.Handle("POST /billing", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.ManageBillingInfo))
 }

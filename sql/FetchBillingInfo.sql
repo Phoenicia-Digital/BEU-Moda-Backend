@@ -1,0 +1,1 @@
+SELECT * FROM billing_info WHERE user_id = $1;

@@ -23,3 +23,13 @@ CREATE TABLE billing_info (
   first_name VARCHAR(255),
   last_name VARCHAR(255)
 );
+
+Table sessions:
+
+CREATE TABLE sessions (
+    id SERIAL PRIMARY KEY,
+    session_id TEXT NOT NULL UNIQUE,
+    user_uid INTEGER NOT NULL REFERENCES users(uid),
+    login_time TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);

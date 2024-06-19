@@ -1,4 +1,4 @@
-PROJECT_NAME=Phoenicia-Digital-Base-API
+PROJECT_NAME=BEU-MODA-API
 MAIN_PACKAGE=main.go
 BUILD_DIR=dist
 

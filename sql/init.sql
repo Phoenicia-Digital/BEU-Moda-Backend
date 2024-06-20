@@ -41,3 +41,12 @@ CREATE TABLE admin_sessions (
   login_time TIMESTAMPTZ NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE items (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    quantity SMALLINT NOT NULL,
+    color VARCHAR(50)
+);

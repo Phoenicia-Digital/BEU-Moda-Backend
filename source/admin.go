@@ -73,6 +73,7 @@ func RegisterNewAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 			Expires:  newUser.Session.Expires,
 			Secure:   true,
 			HttpOnly: true,
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
@@ -80,6 +81,7 @@ func RegisterNewAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 			Value:    newUser.Email,
 			Secure:   true,
 			HttpOnly: false,
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
@@ -87,6 +89,7 @@ func RegisterNewAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 			Value:    fmt.Sprint(newUser.UID),
 			Secure:   true,
 			HttpOnly: false,
+			Path:     "/",
 		})
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Admin Created"}
 	}
@@ -167,6 +170,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 					Expires:  loginUser.Session.Expires,
 					Secure:   true,
 					HttpOnly: true,
+					Path:     "/",
 				})
 
 				http.SetCookie(w, &http.Cookie{
@@ -174,6 +178,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 					Value:    loginUser.Email,
 					Secure:   true,
 					HttpOnly: false,
+					Path:     "/",
 				})
 
 				http.SetCookie(w, &http.Cookie{
@@ -181,6 +186,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 					Value:    fmt.Sprint(loginUser.UID),
 					Secure:   true,
 					HttpOnly: false,
+					Path:     "/",
 				})
 				return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Created"}
 			}
@@ -195,6 +201,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 			Expires:  loginUser.Session.Expires,
 			Secure:   true,
 			HttpOnly: true,
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
@@ -202,6 +209,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 			Value:    loginUser.Email,
 			Secure:   true,
 			HttpOnly: false,
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
@@ -209,6 +217,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 			Value:    fmt.Sprint(loginUser.UID),
 			Secure:   true,
 			HttpOnly: false,
+			Path:     "/",
 		})
 
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Session Exists"}
@@ -307,6 +316,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   true,
 		HttpOnly: true,
+		Path:     "/",
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -314,6 +324,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Value:    "",
 		Secure:   true,
 		HttpOnly: false,
+		Path:     "/",
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -321,6 +332,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Value:    "",
 		Secure:   true,
 		HttpOnly: false,
+		Path:     "/",
 	})
 
 	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: "Session Deleted"}

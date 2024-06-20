@@ -86,4 +86,13 @@ func init() {
 	})
 	multiplexer.Handle("GET /billing", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.FetchBillingInfo))
 	multiplexer.Handle("POST /billing", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.ManageBillingInfo))
+
+	multiplexer.HandleFunc("OPTIONS /catalogue", func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers for all requests (can be more specific if needed)
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	})
+	multiplexer.Handle("POST /catalogue", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.AddNewItem))
+
 }

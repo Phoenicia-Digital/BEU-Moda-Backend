@@ -1,0 +1,1 @@
+SELECT id, session_id, expires_at FROM admin_sessions WHERE user_uid = $1 AND expires_at > NOW();

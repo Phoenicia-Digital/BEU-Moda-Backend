@@ -1,0 +1,1 @@
+SELECT uid, password FROM admins WHERE email = $1;

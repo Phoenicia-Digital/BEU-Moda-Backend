@@ -33,3 +33,21 @@ CREATE TABLE sessions (
     login_time TIMESTAMPTZ NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL
 );
+
+Table admins:
+
+CREATE TABLE admins (
+  uid SERIAL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL  -- Hashed password (security best practice)
+);
+
+Table admin_sessions:
+
+CREATE TABLE admin_sessions (
+    id SERIAL PRIMARY KEY,
+    session_id TEXT NOT NULL UNIQUE,
+    user_uid INTEGER NOT NULL REFERENCES admins(uid),
+    login_time TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
+);

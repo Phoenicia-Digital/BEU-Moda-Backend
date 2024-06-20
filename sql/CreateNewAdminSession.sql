@@ -1,0 +1,1 @@
+INSERT INTO admin_sessions (session_id, user_uid, login_time, expires_at) VALUES ($1, $2, $3, $4) RETURNING id;

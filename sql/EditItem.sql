@@ -1,0 +1,1 @@
+UPDATE items SET name = $1, description = $2, price = $3, quantity = $4, color = $5 WHERE id = $6;

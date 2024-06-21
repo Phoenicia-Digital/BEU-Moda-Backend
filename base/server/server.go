@@ -90,9 +90,20 @@ func init() {
 	multiplexer.HandleFunc("OPTIONS /catalogue", func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers for all requests (can be more specific if needed)
 		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
-		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	})
+	multiplexer.Handle("GET /catalogue", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.GetItems))
 	multiplexer.Handle("POST /catalogue", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.AddNewItem))
+
+	multiplexer.HandleFunc("OPTIONS /catalogue/{id}", func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers for all requests (can be more specific if needed)
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	})
+	multiplexer.Handle("GET /catalogue/{id}", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.GetItemByID))
+	multiplexer.Handle("PUT /catalogue/{id}", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.EditItemByID))
+	multiplexer.Handle("DELETE /catalogue/{id}", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.DeleteItem))
 
 }

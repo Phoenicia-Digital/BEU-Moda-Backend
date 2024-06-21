@@ -1,0 +1,1 @@
+SELECT id, name, description, price, quantity, color FROM items;

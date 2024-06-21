@@ -98,6 +98,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_email",
 			Value:    newUser.Email,
+			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   true,
 			HttpOnly: false,
 			Path:     "/",
@@ -106,6 +107,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
 			Value:    fmt.Sprint(newUser.UID),
+			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   true,
 			HttpOnly: false,
 			Path:     "/",
@@ -195,6 +197,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 				http.SetCookie(w, &http.Cookie{
 					Name:     "user_email",
 					Value:    loginUser.Email,
+					Expires:  time.Now().AddDate(10, 0, 0),
 					Secure:   true,
 					HttpOnly: false,
 					Path:     "/",
@@ -203,6 +206,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 				http.SetCookie(w, &http.Cookie{
 					Name:     "user_id",
 					Value:    fmt.Sprint(loginUser.UID),
+					Expires:  time.Now().AddDate(10, 0, 0),
 					Secure:   true,
 					HttpOnly: false,
 					Path:     "/",
@@ -226,6 +230,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_email",
 			Value:    loginUser.Email,
+			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   true,
 			HttpOnly: false,
 			Path:     "/",
@@ -234,6 +239,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
 			Value:    fmt.Sprint(loginUser.UID),
+			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   true,
 			HttpOnly: false,
 			Path:     "/",
@@ -341,6 +347,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 	http.SetCookie(w, &http.Cookie{
 		Name:     "user_email",
 		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   true,
 		HttpOnly: false,
 		Path:     "/",
@@ -349,6 +356,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 	http.SetCookie(w, &http.Cookie{
 		Name:     "user_id",
 		Value:    "",
+		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   true,
 		HttpOnly: false,
 		Path:     "/",

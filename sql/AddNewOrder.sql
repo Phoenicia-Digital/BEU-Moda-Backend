@@ -1,0 +1,1 @@
+INSERT INTO pending_orders (user_id, ordered_items, total_price, order_time) VALUES ($1, $2, $3, $4) RETURNING order_id;

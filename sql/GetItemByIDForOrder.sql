@@ -1,0 +1,1 @@
+SELECT price, quantity FROM items WHERE id = $1;

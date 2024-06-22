@@ -143,8 +143,17 @@ func init() {
 	multiplexer.HandleFunc("OPTIONS /admin/order/complete/{id}", func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers for all requests (can be more specific if needed)
 		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
-		w.Header().Set("Access-Control-Allow-Methods", "PUT, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	})
+	multiplexer.Handle("GET /admin/order/complete/{id}", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.GetCompletedOrderByID))
 	multiplexer.Handle("PUT /admin/order/complete/{id}", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.CompletePendingOrderByID))
+
+	multiplexer.HandleFunc("OPTIONS /admin/order/complete", func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers for all requests (can be more specific if needed)
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow requests from any origin (http://localhost:3000 in your case)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	})
+	multiplexer.Handle("GET /admin/order/complete", PhoeniciaDigitalUtils.PhoeniciaDigitalHandler(source.GetCompletedOrders))
 }

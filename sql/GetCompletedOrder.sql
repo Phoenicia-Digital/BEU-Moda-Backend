@@ -1,0 +1,1 @@
+SELECT order_id, user_id, total_price, order_time FROM order_history ORDER BY order_id LIMIT $1 OFFSET $2;

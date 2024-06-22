@@ -73,3 +73,14 @@ CREATE TABLE pending_orders (
     order_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+Table order_history:
+
+CREATE TABLE order_history (
+    order_id INTEGER PRIMARY KEY NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(uid),
+    ordered_items JSONB NOT NULL,
+    total_price DECIMAL(10, 2) NOT NULL,
+    order_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+

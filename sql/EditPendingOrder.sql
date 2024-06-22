@@ -1,0 +1,1 @@
+UPDATE pending_orders SET ordered_items = $1, total_price = $2 WHERE order_id = $3;

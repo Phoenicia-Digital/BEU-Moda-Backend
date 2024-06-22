@@ -902,3 +902,205 @@ func GetCompletedOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDigi
 
 	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: order}
 }
+
+func EditPendingOrderByAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
+	var usr User
+	var originalOrder Order
+	var originalQuant map[uint]uint16
+	var differance map[uint]int16
+	var editedOrder Order
+	var jsonbItems []byte
+	var stmt *sql.Stmt
+
+	if err := json.NewDecoder(r.Body).Decode(&editedOrder); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+	}
+
+	if val, err := strconv.ParseUint(r.PathValue("id"), 10, 16); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("ID: %s NOT AN ID", r.PathValue("id"))}
+	} else {
+		originalOrder.OrderID, editedOrder.OrderID = uint(val), uint(val)
+	}
+
+	if cooki, err := r.Cookie("session_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No Session ID | Error: %s", err.Error())}
+	} else {
+		usr.Session.Session_id = cooki.Value
+	}
+
+	if cookie, err := r.Cookie("user_id"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No User ID | Error: %s", err.Error())}
+	} else {
+		if uid, err := strconv.Atoi(cookie.Value); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
+		} else {
+			usr.UID = uint(uid)
+		}
+	}
+
+	// Check Admin Session
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckAdminSession"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
+	} else {
+		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
+		} else {
+			stmt = _stmt
+			defer _stmt.Close()
+		}
+	}
+
+	if err := stmt.QueryRow(usr.Session.Session_id, usr.UID).Scan(&usr.Session.ID); err != nil {
+		if err == sql.ErrNoRows {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
+		} else {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Check Session | Error: %s", err.Error())}
+		}
+	}
+
+	// Retrieve Original Order
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("EditPendingOrderFetch"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
+	} else {
+		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+		} else {
+			stmt = _stmt
+			defer _stmt.Close()
+		}
+	}
+
+	if err := stmt.QueryRow(originalOrder.OrderID).Scan(&jsonbItems, &originalOrder.TotalPrice); err != nil {
+		if err == sql.ErrNoRows {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusConflict, Quote: fmt.Sprintf("No Order With ID: %d For this USER", originalOrder.OrderID)}
+		} else {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Error Quering Row | Error: %s", err.Error())}
+		}
+	} else {
+		if err := json.Unmarshal(jsonbItems, &originalOrder.OrderedItems); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Unmarshal Ordered Items"}
+		}
+	}
+
+	originalQuant = originalQuantities(&originalOrder)
+
+	// Start the validation of the Order to make sure no injections or errors occure
+	// and add the data to order
+
+	for _, orderedItem := range editedOrder.OrderedItems {
+		var price float64
+		var availableQuantity uint16
+
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("GetItemByIDForOrder"); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
+		} else {
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
+		}
+
+		if err := stmt.QueryRow(orderedItem.ID).Scan(&price, &availableQuantity); err != nil {
+			if err == sql.ErrNoRows {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Item With ID: %d, DOES NOT EXIST", orderedItem.ID)}
+			} else {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Fetch Item ID: %d", orderedItem.ID)}
+			}
+		}
+
+		if orderedItem.Quantity > availableQuantity+originalQuant[orderedItem.ID] {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusConflict, Quote: fmt.Sprintf("Item With ID: %d | Quantity Ordered More than Available", orderedItem.ID)}
+		} else {
+			editedOrder.TotalPrice += price * float64(orderedItem.Quantity)
+		}
+	}
+
+	differance = compareDifferance(&originalOrder, &editedOrder)
+
+	for id, quantity := range differance {
+
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("UpdateItemAfterOrder"); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
+		} else {
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
+		}
+
+		if res, err := stmt.Exec(quantity, id); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Update Item ID: %d", id)}
+		} else {
+			if rowsAffected, err := res.RowsAffected(); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed to Check Affected Rows | Error: %s", err.Error())}
+			} else {
+				if rowsAffected == 0 {
+					return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Item with ID: %d Failed To Update", id)}
+				}
+			}
+		}
+
+	}
+
+	if orderedItemsJSON, err := json.Marshal(editedOrder.OrderedItems); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Marshal Ordered Items to JSON"}
+	} else {
+		jsonbItems = orderedItemsJSON
+	}
+
+	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("EditPendingOrder"); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read SQL | Error: %s", err.Error())}
+	} else {
+		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+		} else {
+			stmt = _stmt
+			defer _stmt.Close()
+		}
+	}
+
+	if res, err := stmt.Exec(jsonbItems, editedOrder.TotalPrice, originalOrder.OrderID); err != nil {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed to Edit item | Error: %s", err.Error())}
+	} else {
+		if rowsAffected, err := res.RowsAffected(); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed to Check Affected Rows | Error: %s", err.Error())}
+		} else {
+			if rowsAffected == 0 {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Item with ID: %d Does NOT Exist", originalOrder.OrderID)}
+			}
+		}
+	}
+
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Pending Order Edited"}
+
+}
+
+func compareDifferance(originalOrder, editedOrder *Order) map[uint]int16 {
+	var differance map[uint]int16 = map[uint]int16{}
+
+	for _, item := range editedOrder.OrderedItems {
+		differance[item.ID] = int16(item.Quantity)
+	}
+
+	for _, item := range originalOrder.OrderedItems {
+		differance[item.ID] -= int16(item.Quantity)
+	}
+
+	return differance
+}
+
+func originalQuantities(originalOrder *Order) map[uint]uint16 {
+	var originalQuantities map[uint]uint16 = map[uint]uint16{}
+
+	for _, item := range originalOrder.OrderedItems {
+		originalQuantities[item.ID] = uint16(item.Quantity)
+	}
+
+	return originalQuantities
+}

@@ -1,1 +1,1 @@
-UPDATE items SET quantity = quantity - $1 WHERE id = $2
+UPDATE items SET quantity = quantity - $1 WHERE id = $2;

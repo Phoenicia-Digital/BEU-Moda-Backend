@@ -90,7 +90,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 			Name:     "session_id",
 			Value:    newUser.Session.Session_id,
 			Expires:  newUser.Session.Expires,
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: true,
 			Path:     "/",
 		})
@@ -99,7 +99,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 			Name:     "user_email",
 			Value:    newUser.Email,
 			Expires:  time.Now().AddDate(10, 0, 0),
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: false,
 			Path:     "/",
 		})
@@ -108,7 +108,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 			Name:     "user_id",
 			Value:    fmt.Sprint(newUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: false,
 			Path:     "/",
 		})
@@ -189,7 +189,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 					Name:     "session_id",
 					Value:    loginUser.Session.Session_id,
 					Expires:  loginUser.Session.Expires,
-					Secure:   true,
+					Secure:   false,
 					HttpOnly: true,
 					Path:     "/",
 				})
@@ -198,7 +198,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 					Name:     "user_email",
 					Value:    loginUser.Email,
 					Expires:  time.Now().AddDate(10, 0, 0),
-					Secure:   true,
+					Secure:   false,
 					HttpOnly: false,
 					Path:     "/",
 				})
@@ -207,7 +207,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 					Name:     "user_id",
 					Value:    fmt.Sprint(loginUser.UID),
 					Expires:  time.Now().AddDate(10, 0, 0),
-					Secure:   true,
+					Secure:   false,
 					HttpOnly: false,
 					Path:     "/",
 				})
@@ -222,7 +222,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 			Name:     "session_id",
 			Value:    loginUser.Session.Session_id,
 			Expires:  loginUser.Session.Expires,
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: true,
 			Path:     "/",
 		})
@@ -231,7 +231,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 			Name:     "user_email",
 			Value:    loginUser.Email,
 			Expires:  time.Now().AddDate(10, 0, 0),
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: false,
 			Path:     "/",
 		})
@@ -240,7 +240,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 			Name:     "user_id",
 			Value:    fmt.Sprint(loginUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
-			Secure:   true,
+			Secure:   false,
 			HttpOnly: false,
 			Path:     "/",
 		})
@@ -339,7 +339,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		Name:     "session_id",
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		Path:     "/",
 	})
@@ -348,7 +348,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		Name:     "user_email",
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: false,
 		Path:     "/",
 	})
@@ -357,7 +357,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		Name:     "user_id",
 		Value:    "",
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: false,
 		Path:     "/",
 	})

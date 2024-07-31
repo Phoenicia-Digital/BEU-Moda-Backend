@@ -59,6 +59,10 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: "NOT AN EMAIL"}
 	}
 
+	if len(newUser.Password) < 8 {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: "Password Shorter than 8 characters"}
+	}
+
 	if hashed, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost); err != nil {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	} else {

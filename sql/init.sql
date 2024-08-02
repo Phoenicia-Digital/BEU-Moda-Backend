@@ -48,7 +48,7 @@ CREATE TABLE items (
     description TEXT,
     price DECIMAL(10, 2) NOT NULL,
     quantity SMALLINT NOT NULL,
-    color VARCHAR(50)
+    color TEXT
 );
 
 CREATE TABLE pending_orders (

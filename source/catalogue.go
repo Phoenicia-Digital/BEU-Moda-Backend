@@ -17,7 +17,7 @@ type Item struct {
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
 	Quantity    uint16  `json:"quantity"`
-	Color       string  `json:"color"`
+	Color       string  `json:"image"`
 }
 
 func AddNewItem(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
@@ -76,7 +76,7 @@ func AddNewItem(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 	}
 
 	if newItem.Name == "" || newItem.Quantity <= 0.00 {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Name: %s OR Price: %f | NOT SUFFICIENT FOR ITEM TO BE ADDED", newItem.Name, newItem.Price)}
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Name: %s OR Quantity: %d | NOT SUFFICIENT FOR ITEM TO BE ADDED", newItem.Name, newItem.Quantity)}
 	}
 
 	if err := stmt.QueryRow(newItem.Name, newItem.Description, newItem.Price, newItem.Quantity, newItem.Color).Scan(&newItem.ID); err != nil {

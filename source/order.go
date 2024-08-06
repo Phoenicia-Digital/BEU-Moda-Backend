@@ -17,11 +17,14 @@ type OrderedItem struct {
 }
 
 type Order struct {
-	OrderID      uint          `json:"order_id"`
-	UserID       uint          `json:"user_id"`
-	OrderedItems []OrderedItem `json:"ordered_items"`
-	TotalPrice   float64       `json:"total_price"`
-	OrderTime    time.Time     `json:"order_time"`
+	OrderID        uint          `json:"order_id"`
+	UserID         uint          `json:"user_id"`
+	OrderedItems   []OrderedItem `json:"orderedItems"`
+	FullName       string        `json:"fullName"`
+	BillingAddress string        `json:"billingAdress"`
+	PhoneNumber    uint32        `json:"phoneNumber"`
+	TotalPrice     float64       `json:"total_price"`
+	OrderTime      time.Time     `json:"order_time"`
 }
 
 // Items added to a new table pending when order recieved Items go to history table
@@ -36,13 +39,13 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 	var stmt *sql.Stmt
 
 	if cooki, err := r.Cookie("session_id"); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No Session ID | Error: %s", err.Error())}
+		usr.Session.Session_id = ""
 	} else {
 		usr.Session.Session_id = cooki.Value
 	}
 
 	if cookie, err := r.Cookie("user_id"); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("No User ID | Error: %s", err.Error())}
+		usr.UID = 0
 	} else {
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
@@ -55,29 +58,38 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	}
 
+	if usr.UID == 0 || usr.Session.Session_id == "" {
+		if order.FullName == "" || order.BillingAddress == "" || order.PhoneNumber == 0 {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("As a NON-User one of these values is missing: Full Name: %s, Billing Address: %s, Phone Number: %d", order.FullName, order.BillingAddress, order.PhoneNumber)}
+		}
+	}
+
 	if len := len(order.OrderedItems); len <= 0 {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: "Order Is Empty"}
 	}
+	if usr.Session.Session_id != "" || usr.UID != 0 {
 
-	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckSession"); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
-	} else {
-		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckSession"); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
 		} else {
-			stmt = _stmt
-			defer _stmt.Close()
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
 		}
-	}
 
-	if err := stmt.QueryRow(usr.Session.Session_id, usr.UID).Scan(&usr.Session.ID); err != nil {
-		if err == sql.ErrNoRows {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
+		if err := stmt.QueryRow(usr.Session.Session_id, usr.UID).Scan(&usr.Session.ID); err != nil {
+			if err == sql.ErrNoRows {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
+			} else {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Check Session | Error: %s", err.Error())}
+			}
 		} else {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Check Session | Error: %s", err.Error())}
+			order.UserID = usr.UID
 		}
-	} else {
-		order.UserID = usr.UID
+
 	}
 
 	// Start the validation of the Order to make sure no injections or errors occure
@@ -148,23 +160,45 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 	} else {
 		jsonbItems = orderedItemsJSON
 	}
+	if usr.UID != 0 && usr.Session.Session_id != "" {
 
-	if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrder"); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
-	} else {
-		if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrder"); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
 		} else {
-			stmt = _stmt
-			defer _stmt.Close()
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
 		}
-	}
 
-	if err := stmt.QueryRow(order.UserID, jsonbItems, order.TotalPrice, time.Now()).Scan(&order.OrderID); err != nil {
-		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Add New Order To Database"}
-	}
+		if err := stmt.QueryRow(order.UserID, jsonbItems, order.TotalPrice, time.Now()).Scan(&order.OrderID); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Add New Order To Database"}
+		}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: fmt.Sprintf("New Order added with ID: %d", order.OrderID)}
+		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: fmt.Sprintf("New Order added with ID: %d", order.OrderID)}
+
+	} else {
+
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrderNoUser"); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
+		} else {
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Prepare Query | Error: %s", err.Error())}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
+		}
+
+		if err := stmt.QueryRow(order.FullName, order.BillingAddress, order.PhoneNumber, jsonbItems, order.TotalPrice, time.Now()).Scan(&order.OrderID); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Add New Order To Database"}
+		}
+
+		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: fmt.Sprintf("New Order added with ID: %d", order.OrderID)}
+
+	}
 }
 
 func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {

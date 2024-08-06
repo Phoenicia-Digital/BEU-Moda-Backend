@@ -1081,6 +1081,8 @@ func EditPendingOrderByAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDi
 
 }
 
+// IN APP FUNCTIONS
+
 func compareDifferance(originalOrder, editedOrder *Order) map[uint]int16 {
 	var differance map[uint]int16 = map[uint]int16{}
 

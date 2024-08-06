@@ -53,16 +53,24 @@ CREATE TABLE items (
 
 CREATE TABLE pending_orders (
     order_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(uid),
-    ordered_items jsonb NOT NULL,
+    user_id INTEGER REFERENCES users(uid),
+    non_user_full_name VARCHAR(255),
+    non_user_billing_address TEXT,
+    non_user_phone_number BIGINT,
+    ordered_items JSONB NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
-    order_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    order_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (user_id IS NOT NULL OR (non_user_full_name IS NOT NULL AND non_user_billing_address IS NOT NULL AND non_user_phone_number IS NOT NULL))
 );
 
 CREATE TABLE order_history (
     order_id INTEGER PRIMARY KEY NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users(uid),
+    user_id INTEGER REFERENCES users(uid),
+    non_user_full_name VARCHAR(255),
+    non_user_billing_address TEXT,
+    non_user_phone_number BIGINT,
     ordered_items JSONB NOT NULL,
     total_price DECIMAL(10, 2) NOT NULL,
-    order_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    order_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CHECK (user_id IS NOT NULL OR (non_user_full_name IS NOT NULL AND non_user_billing_address IS NOT NULL AND non_user_phone_number IS NOT NULL))
 );

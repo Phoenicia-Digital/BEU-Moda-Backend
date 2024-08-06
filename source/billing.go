@@ -18,9 +18,9 @@ type BillingInfo struct {
 	Street      string `json:"street"`
 	Building    string `json:"building"`
 	Floor       string `json:"floor"`
-	PhoneNumber uint32 `json:"phone number"`
-	FirstName   string `json:"first name"`
-	LastName    string `json:"last name"`
+	PhoneNumber uint32 `json:"phoneNumber"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
 	ID          uint   `json:"ID"`
 }
 

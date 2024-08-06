@@ -15,7 +15,7 @@ CREATE TABLE billing_info (
   street VARCHAR(255),
   building VARCHAR(255),
   floor VARCHAR(255),
-  phone_number INTEGER,
+  phone_number BIGINT,
   first_name VARCHAR(255),
   last_name VARCHAR(255)
 );

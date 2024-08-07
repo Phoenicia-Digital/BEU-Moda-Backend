@@ -223,6 +223,7 @@ func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -240,7 +241,7 @@ func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		}
 	}
 
-	if err := stmt.QueryRow(usr.Session.Session_id, *usr.UID).Scan(&usr.Session.ID); err != nil {
+	if err := stmt.QueryRow(usr.Session.Session_id, usr.UID).Scan(&usr.Session.ID); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
 		} else {
@@ -309,6 +310,7 @@ func GetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -381,6 +383,7 @@ func GetPendingOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -464,6 +467,7 @@ func AdminGetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) Phoen
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -541,6 +545,7 @@ func RemovePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDig
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -669,6 +674,7 @@ func CompletePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -808,6 +814,7 @@ func GetCompletedOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigital
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -887,6 +894,7 @@ func GetCompletedOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDigi
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}
@@ -971,6 +979,7 @@ func EditPendingOrderByAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDi
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
+			usr.UID = new(uint)
 			*usr.UID = uint(uid)
 		}
 	}

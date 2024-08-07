@@ -53,7 +53,7 @@ CREATE TABLE items (
 
 CREATE TABLE pending_orders (
     order_id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(uid),
+    user_id INTEGER REFERENCES users(uid),
     non_user_full_name VARCHAR(255),
     non_user_billing_address TEXT,
     non_user_phone_number BIGINT,
@@ -65,7 +65,7 @@ CREATE TABLE pending_orders (
 
 CREATE TABLE order_history (
     order_id INTEGER PRIMARY KEY NOT NULL,
-    user_id INTEGER NOT NULL REFERENCES users(uid),
+    user_id INTEGER REFERENCES users(uid),
     non_user_full_name VARCHAR(255),
     non_user_billing_address TEXT,
     non_user_phone_number BIGINT,

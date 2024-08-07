@@ -1,6 +1,9 @@
 SELECT 
     order_id,
     user_id,
+    non_user_full_name,
+    non_user_billing_address,
+    non_user_phone_number,
     ordered_items, 
     total_price, 
     order_time 

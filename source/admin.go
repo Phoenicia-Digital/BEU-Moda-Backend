@@ -73,7 +73,7 @@ func RegisterNewAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 			Expires:  newUser.Session.Expires,
 			Secure:   false,
 			HttpOnly: true,
-			Path:     "/admin",
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
@@ -82,16 +82,16 @@ func RegisterNewAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   false,
 			HttpOnly: false,
-			Path:     "/admin",
+			Path:     "/",
 		})
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
-			Value:    fmt.Sprint(newUser.UID),
+			Value:    fmt.Sprint(*newUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   false,
 			HttpOnly: false,
-			Path:     "/admin",
+			Path:     "/",
 		})
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: "Admin Created"}
 	}
@@ -186,7 +186,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 
 				http.SetCookie(w, &http.Cookie{
 					Name:     "user_id",
-					Value:    fmt.Sprint(loginUser.UID),
+					Value:    fmt.Sprint(*loginUser.UID),
 					Expires:  time.Now().AddDate(10, 0, 0),
 					Secure:   false,
 					HttpOnly: false,
@@ -219,7 +219,7 @@ func LoginAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
-			Value:    fmt.Sprint(loginUser.UID),
+			Value:    fmt.Sprint(*loginUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   false,
 			HttpOnly: false,
@@ -248,7 +248,8 @@ func CheckAdminSession(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			usr.UID = new(uint)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -291,7 +292,8 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			usr.UID = new(uint)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -322,7 +324,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   false,
 		HttpOnly: true,
-		Path:     "/admin",
+		Path:     "/",
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -331,7 +333,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   false,
 		HttpOnly: false,
-		Path:     "/admin",
+		Path:     "/",
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -340,7 +342,7 @@ func LogoutAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.P
 		Expires:  time.Now().Add(-1 * time.Hour).UTC(),
 		Secure:   false,
 		HttpOnly: false,
-		Path:     "/admin",
+		Path:     "/",
 	})
 
 	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: "Session Deleted"}

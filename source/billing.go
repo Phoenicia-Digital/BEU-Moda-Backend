@@ -60,7 +60,7 @@ func ManageBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalU
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			newBillingInfo.UID = uint(uid)
+			*newBillingInfo.UID = uint(uid)
 		}
 	}
 
@@ -155,7 +155,7 @@ func FetchBillingInfo(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 

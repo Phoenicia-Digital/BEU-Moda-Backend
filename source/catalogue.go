@@ -41,7 +41,7 @@ func AddNewItem(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			admin.UID = uint(uid)
+			*admin.UID = uint(uid)
 		}
 	}
 
@@ -115,7 +115,7 @@ func EditItemByID(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			admin.UID = uint(uid)
+			*admin.UID = uint(uid)
 		}
 	}
 
@@ -192,7 +192,7 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			admin.UID = uint(uid)
+			*admin.UID = uint(uid)
 		}
 	}
 

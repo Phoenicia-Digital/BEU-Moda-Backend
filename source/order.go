@@ -18,11 +18,11 @@ type OrderedItem struct {
 
 type Order struct {
 	OrderID        uint          `json:"order_id"`
-	UserID         uint          `json:"user_id"`
+	UserID         *uint         `json:"user_id"`
 	OrderedItems   []OrderedItem `json:"orderedItems"`
-	FullName       string        `json:"fullName"`
-	BillingAddress string        `json:"billingAdress"`
-	PhoneNumber    uint32        `json:"phoneNumber"`
+	FullName       *string       `json:"fullName"`
+	BillingAddress *string       `json:"billingAdress"`
+	PhoneNumber    *uint32       `json:"phoneNumber"`
 	TotalPrice     float64       `json:"total_price"`
 	OrderTime      time.Time     `json:"order_time"`
 }
@@ -45,12 +45,13 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 	}
 
 	if cookie, err := r.Cookie("user_id"); err != nil {
-		usr.UID = 0
+		usr.UID = nil
 	} else {
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			usr.UID = new(uint)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -58,16 +59,16 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
 	}
 
-	if usr.UID == 0 || usr.Session.Session_id == "" {
-		if order.FullName == "" || order.BillingAddress == "" || order.PhoneNumber == 0 {
-			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("As a NON-User one of these values is missing: Full Name: %s, Billing Address: %s, Phone Number: %d", order.FullName, order.BillingAddress, order.PhoneNumber)}
+	if usr.UID == nil || usr.Session.Session_id == "" {
+		if order.FullName == nil || order.BillingAddress == nil || order.PhoneNumber == nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("As a NON-User one of these values is missing: Full Name: %s, Billing Address: %s, Phone Number: %d", *order.FullName, *order.BillingAddress, *order.PhoneNumber)}
 		}
 	}
 
 	if len := len(order.OrderedItems); len <= 0 {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: "Order Is Empty"}
 	}
-	if usr.Session.Session_id != "" || usr.UID != 0 {
+	if usr.Session.Session_id != "" || usr.UID != nil {
 
 		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("CheckSession"); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Retrieve session | Error: %s", err.Error())}
@@ -87,7 +88,8 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Check Session | Error: %s", err.Error())}
 			}
 		} else {
-			order.UserID = usr.UID
+			order.UserID = new(uint)
+			*order.UserID = *usr.UID
 		}
 
 	}
@@ -160,7 +162,8 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 	} else {
 		jsonbItems = orderedItemsJSON
 	}
-	if usr.UID != 0 && usr.Session.Session_id != "" {
+
+	if usr.UID != nil && usr.Session.Session_id != "" {
 
 		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrder"); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
@@ -220,7 +223,7 @@ func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -237,7 +240,7 @@ func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		}
 	}
 
-	if err := stmt.QueryRow(usr.Session.Session_id, usr.UID).Scan(&usr.Session.ID); err != nil {
+	if err := stmt.QueryRow(usr.Session.Session_id, *usr.UID).Scan(&usr.Session.ID); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO SESSION"}
 		} else {
@@ -306,7 +309,7 @@ func GetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -378,7 +381,7 @@ func GetPendingOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -422,7 +425,7 @@ func GetPendingOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 		defer rows.Close()
 
 		for rows.Next() {
-			if err := rows.Scan(&order.OrderID, &order.UserID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
+			if err := rows.Scan(&order.OrderID, &order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed to Query Row | Error: %s", err.Error())}
 			}
 
@@ -461,7 +464,7 @@ func AdminGetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) Phoen
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -538,7 +541,7 @@ func RemovePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDig
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -666,7 +669,7 @@ func CompletePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -805,7 +808,7 @@ func GetCompletedOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigital
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -884,7 +887,7 @@ func GetCompletedOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDigi
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -968,7 +971,7 @@ func EditPendingOrderByAdmin(w http.ResponseWriter, r *http.Request) PhoeniciaDi
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			*usr.UID = uint(uid)
 		}
 	}
 

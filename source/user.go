@@ -18,7 +18,7 @@ import (
 )
 
 type User struct {
-	UID         uint        `json:"ID"`
+	UID         *uint       `json:"ID"`
 	Email       string      `json:"email"`
 	Password    string      `json:"password"`
 	BillingInfo BillingInfo `json:"billing_info"`
@@ -110,7 +110,7 @@ func RegisterNewUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUti
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
-			Value:    fmt.Sprint(newUser.UID),
+			Value:    fmt.Sprint(*newUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   false,
 			HttpOnly: false,
@@ -209,7 +209,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 
 				http.SetCookie(w, &http.Cookie{
 					Name:     "user_id",
-					Value:    fmt.Sprint(loginUser.UID),
+					Value:    fmt.Sprint(*loginUser.UID),
 					Expires:  time.Now().AddDate(10, 0, 0),
 					Secure:   false,
 					HttpOnly: false,
@@ -242,7 +242,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Pho
 
 		http.SetCookie(w, &http.Cookie{
 			Name:     "user_id",
-			Value:    fmt.Sprint(loginUser.UID),
+			Value:    fmt.Sprint(*loginUser.UID),
 			Expires:  time.Now().AddDate(10, 0, 0),
 			Secure:   false,
 			HttpOnly: false,
@@ -271,7 +271,8 @@ func CheckSession(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			usr.UID = new(uint)
+			*usr.UID = uint(uid)
 		}
 	}
 
@@ -314,7 +315,8 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.Ph
 		if uid, err := strconv.Atoi(cookie.Value); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("User ID NOT an uint | Error: %s", err.Error())}
 		} else {
-			usr.UID = uint(uid)
+			usr.UID = new(uint)
+			*usr.UID = uint(uid)
 		}
 	}
 

@@ -1,1 +1,1 @@
-SELECT order_id, user_id, total_price, order_time FROM order_history ORDER BY order_id LIMIT $1 OFFSET $2;
+SELECT order_id, user_id, non_user_full_name, non_user_billing_address, non_user_phone_number, total_price, order_time FROM order_history ORDER BY order_id LIMIT $1 OFFSET $2;

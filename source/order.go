@@ -182,7 +182,7 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: fmt.Sprintf("New Order added with ID: %d", order.OrderID)}
 
-	} else {
+	} else if order.FullName != nil && order.BillingAddress != nil && order.PhoneNumber != nil {
 
 		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrderNoUser"); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
@@ -201,6 +201,8 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 
 		return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusAccepted, Quote: fmt.Sprintf("New Order added with ID: %d", order.OrderID)}
 
+	} else {
+		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Failed To Add Order one or more missing fields: User ID: %d, Session ID: %s, FullName: %s, Billing Address: %s, Phone Number: %d", *usr.UID, usr.Session.Session_id, *order.FullName, *order.BillingAddress, *order.PhoneNumber)}
 	}
 }
 
@@ -506,7 +508,7 @@ func AdminGetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) Phoen
 		}
 	}
 
-	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
+	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusConflict, Quote: fmt.Sprintf("No Order With ID: %d", order.OrderID)}
 		} else {
@@ -584,7 +586,7 @@ func RemovePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDig
 		}
 	}
 
-	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
+	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusConflict, Quote: fmt.Sprintf("No Order With ID: %d", order.OrderID)}
 		} else {
@@ -713,7 +715,7 @@ func CompletePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		}
 	}
 
-	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
+	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusConflict, Quote: fmt.Sprintf("No Order With ID: %d", order.OrderID)}
 		} else {
@@ -734,7 +736,7 @@ func CompletePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		}
 	}
 
-	if res, err := stmt.Exec(order.OrderID, order.UserID, jsonbItems, order.TotalPrice, time.Now()); err != nil {
+	if res, err := stmt.Exec(order.OrderID, order.UserID, order.FullName, order.BillingAddress, order.PhoneNumber, jsonbItems, order.TotalPrice, time.Now()); err != nil {
 		return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Add Order ID: %d To History", order.OrderID)}
 	} else {
 		if rowsAffected, err := res.RowsAffected(); err != nil {
@@ -859,7 +861,7 @@ func GetCompletedOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigital
 		defer rows.Close()
 
 		for rows.Next() {
-			if err := rows.Scan(&order.OrderID, &order.UserID, &order.TotalPrice, &order.OrderTime); err != nil {
+			if err := rows.Scan(&order.OrderID, &order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &order.TotalPrice, &order.OrderTime); err != nil {
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed to Fetch Order From Rows"}
 			}
 
@@ -933,7 +935,7 @@ func GetCompletedOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDigi
 		}
 	}
 
-	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
+	if err := stmt.QueryRow(order.OrderID).Scan(&order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 		if err == sql.ErrNoRows {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: fmt.Sprintf("Order ID: %d Does NOT EXIST", order.OrderID)}
 		} else {

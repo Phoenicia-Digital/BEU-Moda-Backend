@@ -369,7 +369,6 @@ func GetPendingOrderByOrderID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 func GetPendingOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
 	var usr User
 	var orders []Order
-	var order Order
 	var jsonbItems []byte
 	var stmt *sql.Stmt
 
@@ -430,6 +429,7 @@ func GetPendingOrders(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUt
 		defer rows.Close()
 
 		for rows.Next() {
+			var order Order
 			if err := rows.Scan(&order.OrderID, &order.UserID, &order.FullName, &order.BillingAddress, &order.PhoneNumber, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed to Query Row | Error: %s", err.Error())}
 			}

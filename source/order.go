@@ -209,7 +209,6 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.PhoeniciaDigitalResponse {
 	var usr User
 	var orders []Order
-	var order Order
 	var jsonbItems []byte
 	var stmt *sql.Stmt
 
@@ -270,6 +269,7 @@ func GetPendingOrdersByUserID(w http.ResponseWriter, r *http.Request) PhoeniciaD
 		defer rows.Close()
 
 		for rows.Next() {
+			var order Order
 			if err := rows.Scan(&order.OrderID, &jsonbItems, &order.TotalPrice, &order.OrderTime); err != nil {
 				if err == sql.ErrNoRows {
 					return PhoeniciaDigitalUtils.ApiError{Code: http.StatusFailedDependency, Quote: "NO Orders For User"}

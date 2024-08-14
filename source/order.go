@@ -648,7 +648,7 @@ func RemovePendingOrderByID(w http.ResponseWriter, r *http.Request) PhoeniciaDig
 		}
 	}
 
-	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusOK, Quote: fmt.Sprintf("Order With ID: %d Deleted", order.OrderID)}
+	return PhoeniciaDigitalUtils.ApiSuccess{Code: http.StatusNoContent, Quote: fmt.Sprintf("Order With ID: %d Deleted", order.OrderID)}
 
 }
 

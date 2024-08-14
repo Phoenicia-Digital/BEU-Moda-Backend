@@ -21,7 +21,7 @@ type Order struct {
 	UserID         *uint         `json:"user_id"`
 	OrderedItems   []OrderedItem `json:"orderedItems"`
 	FullName       *string       `json:"fullName"`
-	BillingAddress *string       `json:"billingAdress"`
+	BillingAddress *string       `json:"billingAddress"`
 	PhoneNumber    *uint32       `json:"phoneNumber"`
 	TotalPrice     float64       `json:"total_price"`
 	OrderTime      time.Time     `json:"order_time"`

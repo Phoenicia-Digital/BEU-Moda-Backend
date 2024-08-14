@@ -165,6 +165,26 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 
 	if usr.UID != nil && usr.Session.Session_id != "" {
 
+		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("FetchBillingInfo"); err != nil {
+			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+		} else {
+			if _stmt, err := PhoeniciaDigitalDatabase.Postgres.DB.Prepare(query); err != nil {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: err.Error()}
+			} else {
+				stmt = _stmt
+				defer _stmt.Close()
+			}
+		}
+
+		if err := stmt.QueryRow(usr.UID).Scan(&usr.BillingInfo.ID, &usr.UID, &usr.BillingInfo.Country, &usr.BillingInfo.Province, &usr.BillingInfo.City, &usr.BillingInfo.Street,
+			&usr.BillingInfo.Building, &usr.BillingInfo.Floor, &usr.BillingInfo.PhoneNumber, &usr.BillingInfo.FirstName, &usr.BillingInfo.LastName); err != nil {
+			if err == sql.ErrNoRows {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusNotFound, Quote: "NO BILLING INFO"}
+			} else {
+				return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Failed To Fetch Billing Info | Error: %s", err.Error())}
+			}
+		}
+
 		if query, err := PhoeniciaDigitalDatabase.Postgres.ReadSQL("AddNewOrder"); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: fmt.Sprintf("Unable to Read Query | Error: %s", err.Error())}
 		} else {
@@ -176,7 +196,10 @@ func PorcessOrder(w http.ResponseWriter, r *http.Request) PhoeniciaDigitalUtils.
 			}
 		}
 
-		if err := stmt.QueryRow(order.UserID, jsonbItems, order.TotalPrice, time.Now()).Scan(&order.OrderID); err != nil {
+		var address string = fmt.Sprintf("%s st. %s bld. %s, %s, %s", usr.BillingInfo.Street, usr.BillingInfo.Building, usr.BillingInfo.City, usr.BillingInfo.Province, usr.BillingInfo.Country)
+		var fullname string = fmt.Sprintf("%s %s", usr.BillingInfo.FirstName, usr.BillingInfo.LastName)
+
+		if err := stmt.QueryRow(order.UserID, address, fullname, usr.BillingInfo.PhoneNumber, jsonbItems, order.TotalPrice, time.Now()).Scan(&order.OrderID); err != nil {
 			return PhoeniciaDigitalUtils.ApiError{Code: http.StatusInternalServerError, Quote: "Failed To Add New Order To Database"}
 		}
 
